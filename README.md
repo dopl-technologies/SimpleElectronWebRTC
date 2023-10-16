@@ -38,4 +38,4 @@ To run the app:
 
 - The PubNub keys need to be unique for each peer instance. Can also use PubNub functions for key generation.
 
-Let me know if any part needs more explanation!
+
