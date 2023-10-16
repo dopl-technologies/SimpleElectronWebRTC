@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Electron WebRTC App</title>
+</head>
+<body>
+  <h1>WebRTC Video Chat</h1>
+  <button id="start-call">Start Call</button>
+  <div id="local-video-container">
+    <video id="local-video" autoplay playsinline></video>
+  </div>
+  <div id="remote-video-container">
+    <video id="remote-video" autoplay playsinline></video>
+  </div>
+
+  <div id="error-message" style="color: red;"></div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const localVideo = document.getElementById('local-video');
+    const remoteVideo = document.getElementById('remote-video');
+    const startCallButton = document.getElementById('start-call');
+    const errorMessage = document.getElementById('error-message');
+
+    startCallButton.addEventListener('click', () => {
+      startCallButton.disabled = true;
+      errorMessage.textContent = '';
+      ipcRenderer.send('start-call');
+    });
+
+    ipcRenderer.on('local-video', (event, stream) => {
+      localVideo.srcObject = stream;
+    });
+
+    ipcRenderer.on('remote-video', (event, stream) => {
+      remoteVideo.srcObject = stream;
+    });
+
+    ipcRenderer.on('error', (event, message) => {
+      errorMessage.textContent = message;
+    });
+  </script>
+</body>
+</html>
