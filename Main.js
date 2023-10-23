@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const PubNub = require('pubnub');
+const { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate } = require('wrtc'); // Import WebRTC related objects
 
 const publishKey = 'pub-c-d8e5e5ee-1234-47e1-8986-4fb7f1a7e6f1'; 
 const subscribeKey = 'sub-c-cd13ae42-d352-4daf-927e-cead3be9595d';
@@ -11,12 +12,13 @@ const pubnub = new PubNub({
 
 let mainWindow;
 let localStream;
-@@ -41,40 +33,4 @@ ipcMain.on('start-call', async () => {
-  }
+
+ipcMain.on('start-call', async () => {
+  // Your code for starting a call
 });
 
 function createPeerConnection() {
-  peerConnection = new RTCPeerConnection();
+  let peerConnection = new RTCPeerConnection();
 
   localStream.getTracks().forEach(track => {
     peerConnection.addTrack(track, localStream);
