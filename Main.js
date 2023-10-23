@@ -8,7 +8,6 @@ const pubnub = new PubNub({
   publishKey,
   subscribeKey,
 });
-const { pubnub, createPeerConnection } = require('./pubnub'); // Import the PubNub-related code from pubnub.js
 
 let mainWindow;
 let localStream;
