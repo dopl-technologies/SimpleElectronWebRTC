@@ -11,5 +11,9 @@
   "license": "ISC",
   "devDependencies": {
     "electron": "^27.0.2"
+  },
+  "dependencies": {
+    "pubnub": "^7.4.1",
+    "uuid": "^9.0.1"
   }
 }
