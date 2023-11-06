@@ -6,6 +6,15 @@
 
 const { contextBridge } = require('electron');
 
-contextBridge.exposeInMainWorld('electron', {
-  require: require,
+contextBridge.exposeInMainWorld('nodeApi', {
+  require: require
 });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Wait for the nodeApi object to be defined
+  await window.nodeApi.ready;
+
+  // Require the Node.js require() function
+  const require = window.nodeApi.require;
+});
+
