@@ -2,8 +2,10 @@
 <html>
 <head>
   <title>Electron WebRTC App</title>
-  <script src="./preload.js"></script> 
+  <script src="./preload.js" type="text/javascript" preload onload="window.nodeApi.ready();"></script>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' nonce-string;">
 </head>
+
 <body>
   <h1>WebRTC Video Chat</h1>
   <button id="start-call">Start Call</button>
@@ -16,8 +18,9 @@
 
   <div id="error-message" style="color: rgb(0, 255, 86);"></div>
 
-  <script>
-    const { ipcRenderer } = require('electron');
+  <script nonce="nonce-string">
+    const require = window.nodeApi.require;
+    const ipcRenderer = require('electron').ipcRenderer;
 
     const localVideo = document.getElementById('local-video');
     const remoteVideo = document.getElementById('remote-video');
@@ -44,4 +47,5 @@
   </script>
 </body>
 </html>
+
 
