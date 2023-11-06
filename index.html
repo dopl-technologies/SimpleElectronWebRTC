@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Electron WebRTC App</title>
+  <script src="./preload.js"></script> 
 </head>
 <body>
   <h1>WebRTC Video Chat</h1>
@@ -13,7 +14,7 @@
     <video id="remote-video" autoplay playsinline></video>
   </div>
 
-  <div id="error-message" style="color: red;"></div>
+  <div id="error-message" style="color: rgb(0, 255, 86);"></div>
 
   <script>
     const { ipcRenderer } = require('electron');
@@ -43,3 +44,4 @@
   </script>
 </body>
 </html>
+
