@@ -25,12 +25,24 @@ app.on('ready', () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    if (peerConnection) {
+      peerConnection.close();
+      peerConnection = null;
+    }
   });
 });
 
 ipcMain.on('start-call', async () => {
   try {
+    // Request permission to access the camera
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+    // Check the localStream object to make sure that it is not null
+    if (localStream === null) {
+      // Display a message to the user
+      mainWindow.webContents.send('error', 'Failed to access camera and microphone.');
+      return;
+    }
 
     mainWindow.webContents.send('local-video', stream);
 
@@ -39,6 +51,8 @@ ipcMain.on('start-call', async () => {
     createPeerConnection();
   } catch (err) {
     console.error('Error accessing camera and microphone:', err);
+
+    // Display a message to the user
     mainWindow.webContents.send('error', 'Failed to access camera and microphone.');
   }
 });
@@ -62,16 +76,26 @@ function createPeerConnection() {
   pubnub.addListener({
     message: async message => {
       if (message.message.sdp) {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
+        try {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
 
-        pubnub.publish({
-          channel: 'webrtc',
-          message: { sdp: answer },
-        });
+          pubnub.publish({
+            channel: 'webrtc',
+            message: { sdp: answer },
+          });
+        } catch (err) {
+          console.error('Error setting or creating session description:', err);
+        }
       } else if (message.message.iceCandidate) {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(message.message.iceCandidate));
+        if (peerConnection) {
+          try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(message.message.iceCandidate));
+          } catch (err) {
+            console.error('Error adding ICE candidate:', err);
+          }
+        }
       } else if (message.message.remoteStream) {
         mainWindow.webContents.send('remote-video', message.message.remoteStream);
       }
