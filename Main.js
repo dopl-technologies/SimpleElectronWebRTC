@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const PubNub = require('pubnub');
 const { v4: uuidv4 } = require('uuid'); // Import the uuid library
+const path = require('path');
 
 const publishKey = 'pub-c-d8e5e5ee-1234-47e1-8986-4fb7f1a7e6f1';
 const subscribeKey = 'sub-c-cd13ae42-d352-4daf-927e-cead3be9595d';
@@ -19,6 +20,11 @@ app.on('ready', () => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    webPreferences: {
+      //nodeIntegration: true,
+      //contextIsolation: false,
+      preload: path.join(__dirname, 'preload.js')
+    }
   });
 
   mainWindow.loadFile('index.html');
