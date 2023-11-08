@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "pubnub": "^7.4.1",
+    "socket.io": "^4.7.2",
     "uuid": "^9.0.1"
   }
 }
