@@ -45,6 +45,7 @@ app.on('ready', () => {
 });
 
 ipcMain.on('start-call', async () => {
+  console.log("Recieved start call message");
   try {
     // Request permission to access the camera
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
