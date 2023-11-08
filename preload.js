@@ -4,17 +4,28 @@
 //For example, you could use the contextBridge module to expose only the ipcRenderer module to the renderer process. 
 //This would prevent the renderer process from accessing any other Node.js modules.
 
-const { contextBridge } = require('electron');
+const {
+  contextBridge,
+  ipcRenderer
+} = require("electron");
 
-contextBridge.exposeInMainWorld('nodeApi', {
-  require: require
-});
-
-document.addEventListener('DOMContentLoaded', async () => {
-  // Wait for the nodeApi object to be defined
-  await window.nodeApi.ready;
-
-  // Require the Node.js require() function
-  const require = window.nodeApi.require;
-});
-
+// Expose protected methods that allow the renderer process to use
+// the ipcRenderer without exposing the entire object
+contextBridge.exposeInMainWorld(
+  "ipcRenderer", {
+      send: (channel, data) => {
+          // whitelist channels
+          let validChannels = ["toMain"];
+          if (validChannels.includes(channel)) {
+              ipcRenderer.send(channel, data);
+          }
+      },
+      on: (channel, func) => {
+          let validChannels = ["fromMain"];
+          if (validChannels.includes(channel)) {
+              // Deliberately strip event as it includes `sender` 
+              ipcRenderer.on(channel, (event, ...args) => func(...args));
+          }
+      }
+  }
+);

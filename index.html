@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Electron WebRTC App</title>
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' nonce-string;">
+  
 </head>
 
 <body>
@@ -18,10 +18,8 @@
   <div id="error-message" style="color: rgb(0, 255, 86);"></div>
 
   <script nonce="nonce-string">
-    const require = window.nodeApi.require;
-    const ipcRenderer = require('electron').ipcRenderer;
-
-    const localVideo = document.getElementById('local-video');
+   
+const localVideo = document.getElementById('local-video');
     const remoteVideo = document.getElementById('remote-video');
     const startCallButton = document.getElementById('start-call');
     const errorMessage = document.getElementById('error-message');
@@ -29,18 +27,18 @@
     startCallButton.addEventListener('click', () => {
       startCallButton.disabled = true;
       errorMessage.textContent = '';
-      ipcRenderer.send('start-call');
+      window.ipcRenderer.send('start-call');
     });
 
-    ipcRenderer.on('local-video', (event, stream) => {
+    window.ipcRenderer.on('local-video', (event, stream) => {
       localVideo.srcObject = stream;
     });
 
-    ipcRenderer.on('remote-video', (event, stream) => {
+    window.ipcRenderer.on('remote-video', (event, stream) => {
       remoteVideo.srcObject = stream;
     });
 
-    ipcRenderer.on('error', (event, message) => {
+    window.ipcRenderer.on('error', (event, message) => {
       errorMessage.textContent = message;
     });
   </script>
