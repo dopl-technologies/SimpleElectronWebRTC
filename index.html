@@ -6,6 +6,8 @@
 </head>
 
 <body>
+  <script src="render.js"></script>
+
   <h1>WebRTC Video Chat</h1>
   <button id="start-call">Start Call</button>
   <div id="local-video-container">
@@ -23,16 +25,75 @@ const localVideo = document.getElementById('local-video');
     const remoteVideo = document.getElementById('remote-video');
     const startCallButton = document.getElementById('start-call');
     const errorMessage = document.getElementById('error-message');
+    let localStream;
 
-    startCallButton.addEventListener('click', () => {
+    startCallButton.addEventListener('click', async () => {
       startCallButton.disabled = true;
       errorMessage.textContent = '';
-      window.ipcRenderer.send('start-call');
+
+      try {
+        // Request permission to access the camera
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStream = stream
+        localVideo.srcObject = stream;
+    
+        console.log("Ignoring creating a peer connection for now")
+        //createPeerConnection();
+      } catch (err) {
+        console.error('Error accessing camera and microphone:', err);
+      }
     });
 
-    window.ipcRenderer.on('local-video', (event, stream) => {
-      localVideo.srcObject = stream;
-    });
+    function createPeerConnection() {
+      peerConnection = new RTCPeerConnection();
+
+      localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+      });
+
+      peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+          // pubnub.publish({
+          //   channel: 'webrtc',
+          //   message: { iceCandidate: event.candidate },
+          // });
+          window.ipcRenderer.send("on-ice-candidate", event.candidate)
+        }
+      };
+
+      pubnub.addListener({
+        message: async message => {
+          if (message.message.sdp) {
+            try {
+              await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
+              const answer = await peerConnection.createAnswer();
+              await peerConnection.setLocalDescription(answer);
+
+              pubnub.publish({
+                channel: 'webrtc',
+                message: { sdp: answer },
+              });
+            } catch (err) {
+              console.error('Error setting or creating session description:', err);
+            }
+          } else if (message.message.iceCandidate) {
+            if (peerConnection) {
+              try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(message.message.iceCandidate));
+              } catch (err) {
+                console.error('Error adding ICE candidate:', err);
+              }
+            }
+          } else if (message.message.remoteStream) {
+            mainWindow.webContents.send('remote-video', message.message.remoteStream);
+          }
+        },
+      });
+    }
+
+    // window.ipcRenderer.on('local-video', (event, stream) => {
+    //   localVideo.srcObject = stream;
+    // });
 
     window.ipcRenderer.on('remote-video', (event, stream) => {
       remoteVideo.srcObject = stream;

@@ -44,76 +44,84 @@ app.on('ready', () => {
   });
 });
 
-ipcMain.on('start-call', async () => {
-  console.log("Recieved start call message");
-  try {
-    // Request permission to access the camera
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
-    // Check the localStream object to make sure that it is not null
-    if (localStream === null) {
-      // Display a message to the user
-      mainWindow.webContents.send('error', 'Failed to access camera and microphone.');
-      return;
-    }
-
-    mainWindow.webContents.send('local-video', stream);
-
-    localStream = stream;
-
-    createPeerConnection();
-  } catch (err) {
-    console.error('Error accessing camera and microphone:', err);
-
-    // Display a message to the user
-    mainWindow.webContents.send('error', 'Failed to access camera and microphone.');
+ipcMain.on('on-ice-candidate', (candidate) => {
+  if (candidate) {
+    pubnub.publish({
+      channel: 'webrtc',
+      message: { iceCandidate: candidate },
+    });
   }
+} )
+
+// ipcMain.on('start-call', async () => {
+//   try {
+//     // Request permission to access the camera
+//     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+//     // Check the localStream object to make sure that it is not null
+//     if (localStream === null) {
+//       // Display a message to the user
+//       mainWindow.webContents.send('error', 'Failed to access camera and microphone.');
+//       return;
+//     }
+
+//     mainWindow.webContents.send('local-video', stream);
+
+//     localStream = stream;
+
+//     createPeerConnection();
+//   } catch (err) {
+//     console.error('Error accessing camera and microphone:', err);
+
+//     // Display a message to the user
+//     mainWindow.webContents.send('error', 'Failed to access camera and microphone.');
+//   }
+// });
+
+// function createPeerConnection() {
+//   peerConnection = new RTCPeerConnection();
+
+//   localStream.getTracks().forEach(track => {
+//     peerConnection.addTrack(track, localStream);
+//   });
+
+//   peerConnection.onicecandidate = event => {
+//     if (event.candidate) {
+//       pubnub.publish({
+//         channel: 'webrtc',
+//         message: { iceCandidate: event.candidate },
+//       });
+//     }
+//   };
+// }
+
+pubnub.addListener({
+  message: async message => {
+    if (message.message.sdp) {
+      try {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        pubnub.publish({
+          channel: 'webrtc',
+          message: { sdp: answer },
+        });
+      } catch (err) {
+        console.error('Error setting or creating session description:', err);
+      }
+    } else if (message.message.iceCandidate) {
+      if (peerConnection) {
+        try {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(message.message.iceCandidate));
+        } catch (err) {
+          console.error('Error adding ICE candidate:', err);
+        }
+      }
+    } else if (message.message.remoteStream) {
+      mainWindow.webContents.send('remote-video', message.message.remoteStream);
+    }
+  },
 });
 
-function createPeerConnection() {
-  peerConnection = new RTCPeerConnection();
-
-  localStream.getTracks().forEach(track => {
-    peerConnection.addTrack(track, localStream);
-  });
-
-  peerConnection.onicecandidate = event => {
-    if (event.candidate) {
-      pubnub.publish({
-        channel: 'webrtc',
-        message: { iceCandidate: event.candidate },
-      });
-    }
-  };
-
-  pubnub.addListener({
-    message: async message => {
-      if (message.message.sdp) {
-        try {
-          await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
-          const answer = await peerConnection.createAnswer();
-          await peerConnection.setLocalDescription(answer);
-
-          pubnub.publish({
-            channel: 'webrtc',
-            message: { sdp: answer },
-          });
-        } catch (err) {
-          console.error('Error setting or creating session description:', err);
-        }
-      } else if (message.message.iceCandidate) {
-        if (peerConnection) {
-          try {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(message.message.iceCandidate));
-          } catch (err) {
-            console.error('Error adding ICE candidate:', err);
-          }
-        }
-      } else if (message.message.remoteStream) {
-        mainWindow.webContents.send('remote-video', message.message.remoteStream);
-      }
-    },
-  });
-
-  pubnub.subscribe({ channels: ['webrtc'] });
-}
+pubnub.subscribe({ channels: ['webrtc'] });
