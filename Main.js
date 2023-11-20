@@ -53,6 +53,25 @@ ipcMain.on('on-ice-candidate', (candidate) => {
   }
 } )
 
+ipcMain.on('create-peer-connection', () => {
+  pubnub.addListener({
+    message: async message => {
+      ipcMain.send('on-signal-server-message', message.message)
+    },
+  });
+})
+
+ipcMain.on('publish-answer', (answer) => {
+  try {
+    pubnub.publish({
+      channel: 'webrtc',
+      message: { sdp: answer },
+    });
+  } catch (err) {
+    console.error('Error publishing answer:', err);
+  }
+})
+
 // ipcMain.on('start-call', async () => {
 //   try {
 //     // Request permission to access the camera
