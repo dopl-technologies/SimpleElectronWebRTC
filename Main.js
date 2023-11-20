@@ -45,6 +45,7 @@ app.on('ready', () => {
 });
 
 ipcMain.on('on-ice-candidate', (candidate) => {
+  console.log("Handling ice candidate event")
   if (candidate) {
     pubnub.publish({
       channel: 'webrtc',
@@ -54,14 +55,17 @@ ipcMain.on('on-ice-candidate', (candidate) => {
 } )
 
 ipcMain.on('create-peer-connection', () => {
+  console.log("Creating peer connection")
   pubnub.addListener({
     message: async message => {
+      console.log("Received message from signal server")
       ipcMain.send('on-signal-server-message', message.message)
     },
   });
 })
 
 ipcMain.on('publish-answer', (answer) => {
+  console.log("Publishing webrtc answer")
   try {
     pubnub.publish({
       channel: 'webrtc',

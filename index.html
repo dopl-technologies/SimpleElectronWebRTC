@@ -50,15 +50,19 @@
       });
 
       peerConnection.onicecandidate = event => {
+        console.log("ice candidate event")
         if (event.candidate) {
+          console.log("Sending ice candidate to node process")
           window.ipcRenderer.send("on-ice-candidate", event.candidate)
         }
       };
 
+      console.log("Sending create peer candidate to node process")
       window.ipcRenderer.send('create-peer-connection')
     }
 
     window.ipcRenderer.on('set-description', async (message) => {
+      console.log("Received description")
       if (message.sdp) {
         try {
           await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
