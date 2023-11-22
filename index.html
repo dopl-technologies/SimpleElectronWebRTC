@@ -61,8 +61,8 @@
       window.ipcRenderer.send('create-peer-connection')
     }
 
-    window.ipcRenderer.on('set-description', async (message) => {
-      console.log("Received description")
+    window.ipcRenderer.on('on-signal-server-message', async (message) => {
+      console.log("Received signal server event")
       if (message.sdp) {
         try {
           await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));

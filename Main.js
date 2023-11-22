@@ -118,33 +118,33 @@ ipcMain.on('publish-answer', (answer) => {
 //   };
 // }
 
-pubnub.addListener({
-  message: async message => {
-    if (message.message.sdp) {
-      try {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
+// pubnub.addListener({
+//   message: async message => {
+//     if (message.message.sdp) {
+//       try {
+//         await peerConnection.setRemoteDescription(new RTCSessionDescription(message.message.sdp));
+//         const answer = await peerConnection.createAnswer();
+//         await peerConnection.setLocalDescription(answer);
 
-        pubnub.publish({
-          channel: 'webrtc',
-          message: { sdp: answer },
-        });
-      } catch (err) {
-        console.error('Error setting or creating session description:', err);
-      }
-    } else if (message.message.iceCandidate) {
-      if (peerConnection) {
-        try {
-          await peerConnection.addIceCandidate(new RTCIceCandidate(message.message.iceCandidate));
-        } catch (err) {
-          console.error('Error adding ICE candidate:', err);
-        }
-      }
-    } else if (message.message.remoteStream) {
-      mainWindow.webContents.send('remote-video', message.message.remoteStream);
-    }
-  },
-});
+//         pubnub.publish({
+//           channel: 'webrtc',
+//           message: { sdp: answer },
+//         });
+//       } catch (err) {
+//         console.error('Error setting or creating session description:', err);
+//       }
+//     } else if (message.message.iceCandidate) {
+//       if (peerConnection) {
+//         try {
+//           await peerConnection.addIceCandidate(new RTCIceCandidate(message.message.iceCandidate));
+//         } catch (err) {
+//           console.error('Error adding ICE candidate:', err);
+//         }
+//       }
+//     } else if (message.message.remoteStream) {
+//       mainWindow.webContents.send('remote-video', message.message.remoteStream);
+//     }
+//   },
+// });
 
 pubnub.subscribe({ channels: ['webrtc'] });
